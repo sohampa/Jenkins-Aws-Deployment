@@ -24,20 +24,6 @@ jobs:
       run: |
         mvn clean package
         pwd
-
-  
-    # - name: Build Docker Image
-    #   run: docker build -t sohampa/restapi:latest .
-
-
-    # - name: Log in to DockerHub
-    #   uses: docker/login-action@v2
-    #   with:
-    #     username: ${{ secrets.DOCKER_USERNAME }}
-    #     password: ${{ secrets.DOCKER_PASSWORD }}
-
-    # - name: Push Docker Image
-    #   run: docker push sohampa/restapi:latest
     
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -67,11 +53,11 @@ jobs:
     - name: Update ECS Service
       env:
         CLUSTER_NAME: test
-        SERVICE_NAME: restapi-ecs-ecr-service
-        CONTAINER_NAME: restapi-app
+        SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+        CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
         IMAGE_TAG: ${{ github.sha }}
-        ECR_REGISTRY: 543816070942.dkr.ecr.us-east-1.amazonaws.com
-        ECR_REPOSITORY: sohampa
+        ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+        ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
       run: |
         # Get the current task definition
         # Get the current task definition
