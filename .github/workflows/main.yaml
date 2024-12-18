@@ -74,32 +74,36 @@ jobs:
         ECR_REPOSITORY: sohampa
       run: |
         # Get the current task definition
+        # Get the current task definition
         CURRENT_TASK_DEF=$(aws ecs describe-services \
           --cluster $CLUSTER_NAME \
           --services $SERVICE_NAME \
           --query "services[0].taskDefinition" \
           --output text)
-
+        
         # Create a new task definition JSON by replacing the image
         NEW_TASK_DEF=$(aws ecs describe-task-definition \
           --task-definition $CURRENT_TASK_DEF \
           --query "taskDefinition" | \
           jq 'del(.status, .revision, .taskDefinitionArn)' | \
           jq --arg IMAGE "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
-             --arg NAME "$CONTAINER_NAME" \
-             '.containerDefinitions[0].image = $IMAGE | .containerDefinitions[0].name = $NAME')
-
+             '.containerDefinitions[0].image = $IMAGE')
+        
+        # Save the JSON to a file
+        echo "$NEW_TASK_DEF" > new-task-def.json
+        
         # Register the new task definition
-        NEW_TASK_DEF_ARN=$(echo $NEW_TASK_DEF | aws ecs register-task-definition \
-          --cli-input-json file:///dev/stdin \
+        NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+          --cli-input-json file://new-task-def.json \
           --query "taskDefinition.taskDefinitionArn" \
           --output text)
-
+        
         # Update the ECS service to use the new task definition
         aws ecs update-service \
           --cluster $CLUSTER_NAME \
           --service $SERVICE_NAME \
           --task-definition $NEW_TASK_DEF_ARN
+
 
     
 
