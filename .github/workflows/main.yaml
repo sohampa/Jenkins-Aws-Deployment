@@ -51,7 +51,7 @@ jobs:
 
     - name: Build, tag, and push Docker image
       run: |
-        IMAGE_TAG: ${{ github.sha }}
+        IMAGE_TAG= ${{ github.sha }}
         ECR_REGISTRY=543816070942.dkr.ecr.us-east-1.amazonaws.com
         ECR_REPOSITORY=sohampa
             
