@@ -26,8 +26,8 @@ jobs:
         pwd
 
   
-    - name: Build Docker Image
-      run: docker build -t sohampa/restapi:latest .
+    # - name: Build Docker Image
+    #   run: docker build -t sohampa/restapi:latest .
 
 
     # - name: Log in to DockerHub
@@ -52,11 +52,9 @@ jobs:
     - name: Build, tag, and push Docker image
       env:
         IMAGE_TAG: ${{ github.sha }}
+        ECR_REGISTRY: 543816070942.dkr.ecr.us-east-1.amazonaws.com
+        ECR_REPOSITORY: sohampa
       run: |
-        IMAGE_TAG= ${{ github.sha }}
-        ECR_REGISTRY=543816070942.dkr.ecr.us-east-1.amazonaws.com
-        ECR_REPOSITORY=sohampa
-            
         # Build Docker image
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
             
