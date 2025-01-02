@@ -1,4 +1,4 @@
-name: Deploy Java App to AWS ASG
+name: Deploy Java App to AWS ECS with CodeDeploy
 
 on:
   workflow_dispatch:
@@ -18,13 +18,11 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version: '17' # Adjust based on your application's requirements
+        java-version: '17'
 
     - name: Build Java Application
-      run: |
-        mvn clean package
-        pwd
-    
+      run: mvn clean package
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -41,16 +39,25 @@ jobs:
         ECR_REGISTRY: 543816070942.dkr.ecr.us-east-1.amazonaws.com
         ECR_REPOSITORY: sohampa
       run: |
-        # Build Docker image
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-            
-        # Tag the image
         docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            
-        # Push the image
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Update ECS Service
+    - name: Prepare AppSpec File
+      run: |
+        cat <<EOF > AppSpec.yaml
+        version: 0.0
+        Resources:
+          - TargetService:
+              Type: AWS::ECS::Service
+              Properties:
+                TaskDefinition: PLACEHOLDER_FOR_TASK_DEFINITION
+                LoadBalancerInfo:
+                  ContainerName: ${{ vars.CONTAINER_NAME }}
+                  ContainerPort: 80
+        EOF
+
+    - name: Update ECS Service with CodeDeploy
       env:
         CLUSTER_NAME: test
         SERVICE_NAME: ${{ vars.SERVICE_NAME }}
@@ -59,7 +66,6 @@ jobs:
         ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
         ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
       run: |
-        # Get the current task definition
         # Get the current task definition
         CURRENT_TASK_DEF=$(aws ecs describe-services \
           --cluster $CLUSTER_NAME \
@@ -84,16 +90,14 @@ jobs:
           --query "taskDefinition.taskDefinitionArn" \
           --output text)
         
-        # Update the ECS service to use the new task definition
-        aws ecs update-service \
-          --cluster $CLUSTER_NAME \
-          --service $SERVICE_NAME \
-          --task-definition $NEW_TASK_DEF_ARN
+        # Update AppSpec.yaml with the new task definition ARN
+        sed -i "s|PLACEHOLDER_FOR_TASK_DEFINITION|$NEW_TASK_DEF_ARN|g" AppSpec.yaml
 
+        # Trigger a CodeDeploy deployment
+        aws deploy create-deployment \
+          --application-name ${{ vars.CODEDEPLOY_APPLICATION_NAME }} \
+          --deployment-group-name ${{ vars.CODEDEPLOY_DEPLOYMENT_GROUP_NAME }} \
+          --revision "revisionType=AppSpecContent,appSpecContent={\"content\":\"$(cat AppSpec.yaml)\"}"
 
-
-    
-
-    
-
-    
+    - name: Confirm Deployment
+      run: echo "Deployment triggered via CodeDeploy!"
