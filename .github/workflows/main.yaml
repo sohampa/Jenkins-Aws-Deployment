@@ -1,99 +1,27 @@
-name: Deploy Java App to AWS ASG
+name: Deploy to AWS
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - main
+      - github-aws-deployment-oidc
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17' # Adjust based on your application's requirements
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::543816070942:role/Soham-OIDC-Role
+          aws-region: us-east-1
 
-    - name: Build Java Application
-      run: |
-        mvn clean package
-        pwd
-    
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Log in to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Build, tag, and push Docker image
-      env:
-        IMAGE_TAG: ${{ github.sha }}
-        ECR_REGISTRY: 543816070942.dkr.ecr.us-east-1.amazonaws.com
-        ECR_REPOSITORY: sohampa
-      run: |
-        # Build Docker image
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-            
-        # Tag the image
-        docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            
-        # Push the image
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-    - name: Update ECS Service
-      env:
-        CLUSTER_NAME: test
-        SERVICE_NAME: ${{ vars.SERVICE_NAME }}
-        CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
-        IMAGE_TAG: ${{ github.sha }}
-        ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
-        ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-      run: |
-        # Get the current task definition
-        # Get the current task definition
-        CURRENT_TASK_DEF=$(aws ecs describe-services \
-          --cluster $CLUSTER_NAME \
-          --services $SERVICE_NAME \
-          --query "services[0].taskDefinition" \
-          --output text)
-        
-        # Fetch and clean up the task definition
-        NEW_TASK_DEF=$(aws ecs describe-task-definition \
-          --task-definition $CURRENT_TASK_DEF \
-          --query "taskDefinition" | \
-          jq 'del(.status, .revision, .taskDefinitionArn, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' | \
-          jq --arg IMAGE "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
-             '.containerDefinitions[0].image = $IMAGE')
-        
-        # Save the cleaned-up task definition to a file
-        echo "$NEW_TASK_DEF" > new-task-def.json
-        
-        # Register the new task definition
-        NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-          --cli-input-json file://new-task-def.json \
-          --query "taskDefinition.taskDefinitionArn" \
-          --output text)
-        
-        # Update the ECS service to use the new task definition
-        aws ecs update-service \
-          --cluster $CLUSTER_NAME \
-          --service $SERVICE_NAME \
-          --task-definition $NEW_TASK_DEF_ARN
-
-
-
-    
-
-    
-
-    
+      - name: Deploy to AWS
+        run: |
+          aws s3 cp Dockerfile s3://test-soham-bucket/
