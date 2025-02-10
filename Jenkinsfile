@@ -11,8 +11,7 @@ pipeline {
         stage('Clone Repository') {
           steps {
             git branch: 'main',
-              credentialsId: 'soham-gihub',
-              url: 'git@github.com:sohampa/Jenkins-Aws-Deployment.git'
+              url: 'https://github.com/sohampa/Jenkins-Aws-Deployment.git'
     }
 }
 
