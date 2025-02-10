@@ -27,6 +27,8 @@ pipeline {
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh """
+                        sudo chown -R ubuntu:ubuntu /opt/myapp
+                        sudo chmod -R 755 /opt/myapp
                         scp -o StrictHostKeyChecking=no target/*.jar ${EC2_USER}@${EC2_IP}:/opt/myapp/app.jar
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl restart myapp'
                     """
