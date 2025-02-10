@@ -27,7 +27,8 @@ pipeline {
                 sshagent(['ec2-ssh-key']) {
                     sh """
                         sudo hostname
-                        mv target/app.jar ${EC2_USER}@${EC2_IP}:/opt/myapp/app.jar
+                        mv target/app.jar ${EC2_USER}@${EC2_IP}:/opt/myapp/
+                        ls
                         sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl restart myapp'
                     """
                 }
