@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'soham-jenkins-runner' }
 
     // environment {
     //     EC2_USER = "ec2-user"  // Change for Ubuntu (e.g., ubuntu)
