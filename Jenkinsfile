@@ -21,17 +21,21 @@ pipeline {
                 sh 'mv target/restapidemo-0.0.1-SNAPSHOT.jar target/app.jar'
             }
         }
+        
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
-                    sh """
-                        sudo hostname
-                        mv target/app.jar ${EC2_USER}@${EC2_IP}:/opt/myapp/
-                        ls
-                        sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl restart myapp'
-                    """
-                }
+                withCredentials([aws(credentialsId: 'soham-ec2')]) {
+                    sh 'aws s3 ls'
+                    }
+                // sshagent(['ec2-ssh-key']) {
+                //     sh """
+                //         sudo hostname
+                //         mv target/app.jar ${EC2_USER}@${EC2_IP}:/opt/myapp/
+                //         ls
+                //         sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl restart myapp'
+                //     """
+                // }
             }
         }
     }
