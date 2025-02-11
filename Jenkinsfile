@@ -29,7 +29,6 @@ pipeline {
                     sh """
                         
                         sudo hostname
-                        mv target/app.jar ${EC2_USER}@${EC2_IP}:/home/ubuntu/
                         ls
                         sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl nginx'
                     """
