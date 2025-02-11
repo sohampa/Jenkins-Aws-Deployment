@@ -20,26 +20,41 @@ pipeline {
             }
         }
          stage('Deploy to EC2') {
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'PEM_FILE', usernameVariable: 'SSH_USER')]) {
-                    script {
-                        def JAR_FILE = "target/restapidemo-0.0.1-SNAPSHOT.jar"  // Update this with your actual JAR file path
-                        def REMOTE_PATH = "/home/ubuntu/restapidemo-0.0.1-SNAPSHOT.jar"
-                        def REMOTE_SERVER = "18.205.235.103"
-                        sh "ls -l ${JAR_FILE} || echo 'JAR file not found'"
+    steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'PEM_FILE', usernameVariable: 'SSH_USER')]) {
+            script {
+                def JAR_FILE = "target/restapidemo-0.0.1-SNAPSHOT.jar"  // Path of JAR file
+                def REMOTE_DIR = "/home/ubuntu"  // Remote directory
+                def REMOTE_SERVER = "18.205.235.103"
 
-                        // Copy JAR file to EC2 instance
-                        sh """
-                            scp -o StrictHostKeyChecking=no -i "\$PEM_FILE" "\$JAR_FILE" "\$SSH_USER@\$REMOTE_SERVER:\$REMOTE_PATH"
-                        """
-                        sh """
-                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'cd $REMOTE_PATH'
-                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'ls'
-                        """
-                    }
-                }
+                // Debugging: Print variable values
+                sh """
+                    echo "JAR_FILE: $JAR_FILE"
+                    echo "REMOTE_DIR: $REMOTE_DIR"
+                    echo "REMOTE_SERVER: $REMOTE_SERVER"
+                    echo "PEM_FILE: $PEM_FILE"
+                """
+
+                // Ensure JAR file exists
+                sh "ls -l ${JAR_FILE} || echo 'JAR file not found'"
+
+                // Securely copy JAR file to EC2
+                sh """
+                    scp -o StrictHostKeyChecking=no -i "\$PEM_FILE" "\$JAR_FILE" "\$SSH_USER@\$REMOTE_SERVER:\$REMOTE_DIR/"
+                """
+
+                // SSH into EC2 and check the file
+                sh """
+                    ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" "\$SSH_USER@\$REMOTE_SERVER" '
+                    cd $REMOTE_DIR &&
+                    ls -lh restapidemo-0.0.1-SNAPSHOT.jar &&
+                    sudo systemctl restart nginx'
+                """
             }
         }
+    }
+}
+
         
     }
 }
