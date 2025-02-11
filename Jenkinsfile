@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         EC2_USER = "ubuntu"  // Change for Ubuntu (e.g., ubuntu)
-        EC2_IP = "3.225.1.206"
+        EC2_IP = "18.205.235.103"
         SSH_KEY = credentials('ec2-ssh-key')  // Use Jenkins SSH key credentials
     }
 
@@ -25,17 +25,15 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                withCredentials([aws(credentialsId: 'soham-ec2')]) {
-                    sh 'aws s3 ls'
-                    }
-                // sshagent(['ec2-ssh-key']) {
-                //     sh """
-                //         sudo hostname
-                //         mv target/app.jar ${EC2_USER}@${EC2_IP}:/opt/myapp/
-                //         ls
-                //         sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl restart myapp'
-                //     """
-                // }
+                sshagent(['ec2-ssh-key']) {
+                    sh """
+                        
+                        sudo hostname
+                        mv target/app.jar ${EC2_USER}@${EC2_IP}:/home/ubuntu/
+                        ls
+                        sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl nginx'
+                    """
+                }
             }
         }
     }
