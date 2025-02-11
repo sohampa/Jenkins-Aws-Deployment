@@ -24,14 +24,12 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
                     sh """
                         
                         sudo hostname
                         ls
                         sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl nginx'
                     """
-                }
             }
         }
     }
