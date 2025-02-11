@@ -18,7 +18,6 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean package'
-                sh 'mv target/restapidemo-0.0.1-SNAPSHOT.jar target/app.jar'
             }
         }
         
