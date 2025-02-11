@@ -23,14 +23,20 @@ pipeline {
         
 
         stage('Deploy to EC2') {
-            steps {
-                    sh """
-                        
-                        sudo hostname
-                        ls
-                        sudo ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'sudo systemctl nginx'
-                    """
-            }
+            withCredentials([string(credentialsId: 'ec2-ssh-key', variable: 'PEM_CONTENT')]) {
+                    script {
+                        // Store PEM content as a variable
+                        def pemVariable = PEM_CONTENT
+
+                        // SSH command using the private key
+                        sh """
+                            echo "\$PEM_CONTENT" > temp.pem
+                            chmod 600 temp.pem
+                            ssh -o StrictHostKeyChecking=no -i temp.pem ubuntu@18.205.235.103 'sudo systemctl restart nginx'
+                            rm -f temp.pem
+                        """
+                    }
+                }
         }
     }
 }
