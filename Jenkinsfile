@@ -19,16 +19,12 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
-        stage('Deploy to EC2') {
+         stage('Deploy to EC2') {
             steps {
-                withCredentials([string(credentialsId: 'ec2-ssh-key', variable: 'PEM_CONTENT')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'PEM_FILE')]) {
                     script {
-                        // SSH command using the private key
                         sh """
-                            echo "\$PEM_CONTENT" > temp.pem
-                            chmod 600 temp.pem
-                            ssh -o StrictHostKeyChecking=no -i temp.pem ubuntu@18.205.235.103 'sudo systemctl restart nginx'
-                            rm -f temp.pem
+                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'sudo systemctl restart nginx'
                         """
                     }
                 }
