@@ -23,8 +23,15 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'PEM_FILE')]) {
                     script {
+                        def JAR_FILE = "target/restapidemo-0.0.1-SNAPSHOT.jar"  // Update this with your actual JAR file path
+                        def REMOTE_PATH = "/home/ubuntu/restapidemo-0.0.1-SNAPSHOT.jarr"
+                        def REMOTE_SERVER = "18.205.235.103"
                         sh """
-                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'pwd'
+                            scp -o StrictHostKeyChecking=no -i "\$PEM_FILE" \$JAR_FILE \$SSH_USER@\$REMOTE_SERVER:\$REMOTE_PATH
+                        """
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'cd $REMOTE_PATH'
+                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'ls'
                         """
                     }
                 }
