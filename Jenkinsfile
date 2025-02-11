@@ -12,22 +12,17 @@ pipeline {
           steps {
             git branch: 'main',
               url: 'https://github.com/sohampa/Jenkins-Aws-Deployment.git'
-    }
-}
-
+            }
+        }
         stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
         }
-        
-
         stage('Deploy to EC2') {
-            withCredentials([string(credentialsId: 'ec2-ssh-key', variable: 'PEM_CONTENT')]) {
+            steps {
+                withCredentials([string(credentialsId: 'ec2-ssh-key', variable: 'PEM_CONTENT')]) {
                     script {
-                        // Store PEM content as a variable
-                        def pemVariable = PEM_CONTENT
-
                         // SSH command using the private key
                         sh """
                             echo "\$PEM_CONTENT" > temp.pem
@@ -37,6 +32,8 @@ pipeline {
                         """
                     }
                 }
+            }
         }
+        
     }
 }
