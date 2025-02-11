@@ -24,7 +24,7 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'PEM_FILE')]) {
                     script {
                         sh """
-                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'sudo systemctl restart nginx'
+                            ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 'pwd'
                         """
                     }
                 }
