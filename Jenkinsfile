@@ -40,7 +40,7 @@ pipeline {
 
                 // Securely copy JAR file to EC2
                 sh """
-                    scp -o StrictHostKeyChecking=no -i "\$PEM_FILE" "\${JAR_FILE}" ubuntu@18.205.235.103:/home/ubuntu/app/
+                    scp -o StrictHostKeyChecking=no -i "\$PEM_FILE" target/restapidemo-0.0.1-SNAPSHOT.jar ubuntu@18.205.235.103:/home/ubuntu/app/
                 """
 
                 // SSH into EC2 and check the file
