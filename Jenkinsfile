@@ -45,7 +45,7 @@ pipeline {
 
                 // SSH into EC2 and check the file
                 sh """
-                    ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@18.205.235.103 '
+                    ssh -o StrictHostKeyChecking=no -i "\$PEM_FILE" ubuntu@35.175.171.147 '
                     nohup java -jar /home/ubuntu/restapidemo-0.0.1-SNAPSHOT.jar > /home/ubuntu/app.log 2>&1 &'
                 """
             }
